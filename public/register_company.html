@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register Company</title>
+</head>
+<body>
+  <h1>Register Company</h1>
+  <form id="registerCompanyForm">
+    <label for="companyName">Company Name:</label>
+    <input type="text" id="companyName" name="companyName" required><br>
+    <label for="companyAddress">Company Address:</label>
+    <input type="text" id="companyAddress" name="companyAddress" required><br>
+    <label for="industry">Industry:</label>
+    <input type="text" id="industry" name="industry" required><br>
+    <label for="numberOfEmployees">Number of Employees:</label>
+    <input type="number" id="numberOfEmployees" name="numberOfEmployees" required><br>
+    <label for="emailId">Email ID:</label>
+    <input type="email" id="emailId" name="emailId" required><br>
+    <label for="password">Password:</label>
+    <input type="password" id="password" name="password" required><br>
+    <label for="supportId">Support ID:</label>
+    <input type="text" id="supportId" name="supportId" required><br>
+    <button type="submit">Register</button>
+  </form>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script>
+    document.getElementById('registerCompanyForm').addEventListener('submit', async function(event) {
+      event.preventDefault();
+      const companyName = document.getElementById('companyName').value;
+      const companyAddress = document.getElementById('companyAddress').value;
+      const industry = document.getElementById('industry').value;
+      const numberOfEmployees = document.getElementById('numberOfEmployees').value;
+      const emailId = document.getElementById('emailId').value;
+      const password = document.getElementById('password').value
+      const supportId = document.getElementById('supportId').value;
+      try {
+        const response = await axios.post('/api/auth/register/company', { companyName, companyAddress, industry, numberOfEmployees, 
+          emailId,password,supportId });
+        alert(response.data.message);
+      } catch (error) {
+        console.error(error);
+        alert('Error registering company');
+      }
+    });
+  </script>
+</body>
+</html>

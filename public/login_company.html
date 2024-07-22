@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login Company</title>
+</head>
+<body>
+  <h1>Login Company</h1>
+  <form id="loginCompanyForm">
+    <label for="emailId">Email ID:</label>
+    <input type="email" id="emailId" name="emailId" required><br>
+    <label for="password">Password:</label>
+    <input type="password" id="password" name="password" required><br>
+    <button type="submit">Login</button>
+  </form>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script>
+    document.getElementById('loginCompanyForm').addEventListener('submit', async function(event) {
+      event.preventDefault();
+      const emailId = document.getElementById('emailId').value;
+      const password = document.getElementById('password').value;
+      try {
+        const response = await axios.post('/api/auth/login/company', { emailId, password });
+        localStorage.setItem('token', response.data.token);
+        window.location.href = 'dashboard_company.html';
+      } catch (error) {
+        console.error(error);
+        alert('Error logging in');
+      }
+    });
+  </script>
+</body>
+</html>

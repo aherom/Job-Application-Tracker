@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jobs</title>
+</head>
+<body>
+  <h1>Jobs</h1>
+  
+  <div>
+    <label for="searchCompanyName">Search by Company Name:</label>
+    <input type="text" id="searchCompanyName" oninput="filterJobs()">
+    
+    <label for="searchJobPosition">Search by Job Position:</label>
+    <input type="text" id="searchJobPosition" oninput="filterJobs()">
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Company Name</th>
+        <th>Job Position</th>
+        <th>Job Openings</th>
+        <th>Job Description</th>
+        <th>Support Email</th>
+        <th>Apply</th>
+      </tr>
+    </thead>
+    <tbody id="jobsList"></tbody>
+  </table>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script>
+    let jobs = [];
+
+    window.onload = async function() {
+      const token = localStorage.getItem('token');
+      try {
+        const response = await axios.get('/api/jobs', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        jobs = response.data;
+        displayJobs(jobs);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    function displayJobs(jobs) {
+      const jobsList = document.getElementById('jobsList');
+      jobsList.innerHTML = ''; // Clear existing jobs
+      jobs.forEach(job => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${job.companyName}</td>
+          <td>${job.jobPosition}</td>
+          <td>${job.jobOpening}</td>
+          <td>${job.jobDescription}</td>
+          <td>${job.supportId}</td>
+          <td>
+            ${job.jobRegistrationStatus ? `<button onclick="applyJob(${job.jobId})">Apply</button>` : 'Registration Closed'}
+          </td>`;
+        jobsList.appendChild(row);
+      });
+    }
+
+    function filterJobs() {
+      const searchCompanyName = document.getElementById('searchCompanyName').value.toLowerCase();
+      const searchJobPosition = document.getElementById('searchJobPosition').value.toLowerCase();
+      const filteredJobs = jobs.filter(job => 
+        job.companyName.toLowerCase().includes(searchCompanyName) &&
+        job.jobPosition.toLowerCase().includes(searchJobPosition)
+      );
+      displayJobs(filteredJobs);
+    }
+
+    async function applyJob(jobId) {
+      const token = localStorage.getItem('token');
+      try {
+        const response = await axios.post(`/api/applications/apply/${jobId}`, {}, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        alert(response.data.message);
+      } catch (error) {
+        console.error(error);
+        alert('Error applying for job');
+      }
+    }
+  </script>
+</body>
+</html>

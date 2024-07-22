@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Jobs</title>
+</head>
+<body>
+  <h1>Manage Jobs</h1>
+  <table>
+    <thead>
+      <tr>
+        <th>Job Position</th>
+        <th>Job Openings</th>
+        <th>Job Description</th>
+        <th>Job Registration Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="manageJobsList"></tbody>
+  </table>
+  
+  <!-- Modal for displaying applicants -->
+  <div id="applicantsModal" style="display: none;">
+    <h2>Applicants</h2>
+    <ul id="applicantsList"></ul>
+    <button onclick="closeModal()">Close</button>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script>
+    window.onload = async function() {
+      const token = localStorage.getItem('token');
+      try {
+        const response = await axios.get('/api/jobs/company', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const jobs = response.data;
+        const manageJobsList = document.getElementById('manageJobsList');
+        jobs.forEach(job => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${job.jobPosition}</td>
+            <td>${job.jobOpening}</td>
+            <td>${job.jobDescription}</td>
+            <td>${job.jobRegistrationStatus ? 'Open' : 'Closed'}</td>
+            <td>
+              <button onclick="applicants(${job.jobId})">Applicants</button>
+              <button onclick="toggleJobStatus(${job.jobId})">${job.jobRegistrationStatus ? 'Close' : 'Open'}</button>
+            </td>`;
+          manageJobsList.appendChild(row);
+        });
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    
+    async function applicants(jobId) {
+      const token = localStorage.getItem('token');
+      try {
+        const response = await axios.get(`/api/companies/viewRegisteredUsers/${jobId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const applicantsList = document.getElementById('applicantsList');
+        applicantsList.innerHTML = ''; // Clear existing list
+        response.data.forEach(user => {
+          const li = document.createElement('li');
+          li.innerHTML = `
+            <p>Email: ${user.email}</p>
+            <p>Highest Education: ${user.highestEducation}</p>
+            <p>Description: ${user.userDescription}</p>
+            <p>GitHub: ${user.githubLink}</p>
+            <p>Address: ${user.address}</p>
+            <p>Phone: ${user.phoneNumber}</p>
+            <button onclick="downloadFile('${user.userId}', 'resume')">Download Resume</button>
+            <button onclick="downloadFile('${user.userId}', 'coverPage'); showStatusUpdateSection('${user.userId}', '${user.email}')">Download Cover Page</button>
+            <div id="statusUpdateSection-${user.userId}" >
+              <form onsubmit="updateStatus(event, '${user.userId}', '${user.email}')">
+                <input type="radio" name="status" value="interviewed" required> Interviewed<br>
+                <input type="radio" name="status" value="offered"> Offered<br>
+                <input type="radio" name="status" value="document verification"> Document Verification<br>
+                <button type="submit">Update Status</button>
+              </form>
+            </div>
+          `;
+          applicantsList.appendChild(li);
+        });
+        document.getElementById('applicantsModal').style.display = 'block';
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    async function downloadFile(userId, fileType) {
+      const token = localStorage.getItem('token');
+      try {
+        const response = await axios.get(`/api/user/download/${fileType}/${userId}`, {
+          headers: { 'Authorization': `Bearer ${token}` },
+          responseType: 'blob' // Important for handling binary data
+        });
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `${fileType}.pdf`); // Use appropriate file name and extension
+        document.body.appendChild(link);
+        link.click();
+      } catch (error) {
+        console.error('Error downloading file', error);
+      }
+    }
+
+    function showStatusUpdateSection(userId, email) {
+      document.getElementById(`statusUpdateSection-${userId}`).style.display = 'block';
+    }
+
+    async function updateStatus(event, userId, email) {
+      event.preventDefault();
+      const formData = new FormData(event.target);
+      const status = formData.get('status');
+      
+      try {
+        const response = await axios.post('/api/user/updateStatus', {
+          userId,
+          status,
+          email
+        });
+        console.log(response.data.jobPosition);
+        alert('Status updated successfully');
+      } catch (error) {
+        console.error('Error updating status', error);
+        alert('Error updating status');
+      }
+    }
+
+    function closeModal() {
+      document.getElementById('applicantsModal').style.display = 'none';
+    }
+
+    async function toggleJobStatus(jobId) {
+      const token = localStorage.getItem('token');
+      try {
+        const response = await axios.put(`/api/companies/toggleJobStatus/${jobId}`, {}, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        window.location.reload();
+      } catch (error) {
+        console.error(error);
+        alert('Error toggling job status');
+      }
+    }
+  </script>
+</body>
+</html>

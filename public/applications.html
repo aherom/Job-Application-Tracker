@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Applications</title>
+</head>
+<body>
+  <h1>Applications</h1>
+  <table>
+    <thead>
+      <tr>
+        <th>Company Name</th>
+        <th>Job Position</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody id="applicationsList"></tbody>
+  </table>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script>
+    window.onload = async function() {
+      const token = localStorage.getItem('token');
+      try {
+        const response = await axios.get('/api/applications', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const applications = response.data;
+        const applicationsList = document.getElementById('applicationsList');
+        applications.forEach(application => {
+          const row = document.createElement('tr');
+          row.innerHTML = `<td>${application.companyName}</td><td>${application.jobPosition}</td><td>${application.status}</td>`;
+          applicationsList.appendChild(row);
+        });
+      } catch (error) {
+        console.error(error);
+      }
+    }
+  </script>
+</body>
+</html>
